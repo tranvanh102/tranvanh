@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Bài 2</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        form {
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+        }
+
+        form label {
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        form input[type="text"],
+        form input[type="email"],
+        form input[type="password"] {
+            width: 100%;
+            padding: 8px 12px;
+            margin-top: 6px;
+            border: 1.5px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        form input[type="text"]:focus,
+        form input[type="email"]:focus,
+        form input[type="password"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        button[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        span.error {
+            font-size: 13px;
+            color: #e74c3c;
+            margin-top: 4px;
+            display: block;
+        }
+
+        #successMessage {
+            background-color: #d4edda;
+            border: 1.5px solid #28a745;
+            color: #155724;
+            padding: 20px 25px;
+            border-radius: 8px;
+            width: 350px;
+        }
+
+        #successMessage h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        #showDetails {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        #showDetails:hover {
+            background-color: #1e7e34;
+        }
+
+        #details {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <form id="registerForm">
+        <label>Họ tên: <input type="text" id="fullname" name="fullname" /></label><br />
+        <label>Email: <input type="email" id="email" name="email" /></label><br />
+        <label>Mật khẩu: <input type="password" id="password" name="password" /></label><br />
+        <button type="submit">Đăng ký</button>
+    </form>
+
+    <div id="successMessage" style="display:none; color: green;">
+        <h3>Chúc mừng bạn đã đăng ký thành công!</h3>
+        <button id="showDetails">Xem chi tiết</button>
+        <div id="details" style="display:none;">
+            <p>Thông tin chi tiết sẽ được gửi về email của bạn.</p>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            console.log("jQuery is ready!");
+
+            $('#registerForm').on('submit', function (e) {
+                e.preventDefault();
+
+                $('span.error').remove();
+
+                let isValid = true;
+
+                let fullname = $('#fullname').val().trim();
+                let email = $('#email').val().trim();
+                let password = $('#password').val();
+
+                if (fullname === '') {
+                    $('#fullname').after('<span class="error" style="color:red;">Họ tên không được để trống</span>');
+                    isValid = false;
+                }
+
+                let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (email === '') {
+                    $('#email').after('<span class="error" style="color:red;">Email không được để trống</span>');
+                    isValid = false;
+                } else if (!emailRegex.test(email)) {
+                    $('#email').after('<span class="error" style="color:red;">Email không hợp lệ</span>');
+                    isValid = false;
+                }
+
+                if (password.length < 6) {
+                    $('#password').after('<span class="error" style="color:red;">Mật khẩu phải từ 6 ký tự trở lên</span>');
+                    isValid = false;
+                }
+
+                if (isValid) {
+                    $.ajax({
+                        url: 'https://jsonplaceholder.typicode.com/posts',
+                        method: 'POST',
+                        data: {
+                            fullname: fullname,
+                            email: email,
+                            password: password
+                        },
+                        success: function (response) {
+                            console.log('Đăng ký thành công', response);
+                            $('#registerForm').trigger('formSuccess');
+                            alert('Đăng ký thành công!');
+                        },
+                        error: function () {
+                            alert('Server bận, vui lòng thử lại sau');
+                        }
+                    });
+                }
+            });
+
+            $('#registerForm').on('formSuccess', function () {
+                $(this).slideUp();
+                $('#successMessage').fadeIn();
+            });
+
+            $('#showDetails').on('click', function () {
+                $('#details').slideToggle();
+            });
+
+        });
+    </script>
+
+</body>
+
+</html>
