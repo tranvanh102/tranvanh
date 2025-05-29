@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quản Lý Sách</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f8;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .book-form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .book-form h2 {
+      margin-bottom: 15px;
+    }
+
+    .book-form input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .book-form button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .book-form button:hover {
+      background-color: #0056b3;
+    }
+
+    .book-list {
+      margin-top: 20px;
+    }
+
+    .book-card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .book-info h3 {
+      margin: 0 0 5px 0;
+    }
+
+    .book-actions button {
+      margin-left: 8px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .book-actions button:first-child {
+      background-color: #ffc107;
+      color: #fff;
+    }
+
+    .book-actions button:last-child {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .book-actions button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React & Babel -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Ứng dụng React -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function BookForm({ onAdd, onUpdate, editingBook }) {
+      const [title, setTitle] = useState('');
+      const [author, setAuthor] = useState('');
+      const [year, setYear] = useState('');
+
+      useEffect(() => {
+        if (editingBook) {
+          setTitle(editingBook.title);
+          setAuthor(editingBook.author);
+          setYear(editingBook.year);
+        } else {
+          setTitle('');
+          setAuthor('');
+          setYear('');
+        }
+      }, [editingBook]);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!title || !author || !year) {
+          alert("Vui lòng nhập đầy đủ thông tin!");
+          return;
+        }
+
+        const newBook = {
+          id: editingBook ? editingBook.id : Date.now(),
+          title,
+          author,
+          year: parseInt(year)
+        };
+
+        editingBook ? onUpdate(newBook) : onAdd(newBook);
+        setTitle('');
+        setAuthor('');
+        setYear('');
+      };
+
+      return (
+        <form className="book-form" onSubmit={handleSubmit}>
+          <h2>{editingBook ? '✏️ Sửa Sách' : '➕ Thêm Sách'}</h2>
+          <input
+            placeholder="Tiêu đề sách"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+          <input
+            placeholder="Tác giả"
+            value={author}
+            onChange={e => setAuthor(e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Năm xuất bản"
+            value={year}
+            onChange={e => setYear(e.target.value)}
+          />
+          <button type="submit">
+            {editingBook ? 'Cập nhật' : 'Thêm'}
+          </button>
+        </form>
+      );
+    }
+
+    function BookList({ books, onEdit, onDelete }) {
+      return (
+        <div className="book-list">
+          <h2>📖 Danh sách sách</h2>
+          {books.length === 0 ? (
+            <p>Chưa có sách nào.</p>
+          ) : (
+            books.map(book => (
+              <div className="book-card" key={book.id}>
+                <div className="book-info">
+                  <h3>{book.title}</h3>
+                  <p><strong>Tác giả:</strong> {book.author}</p>
+                  <p><strong>Năm:</strong> {book.year}</p>
+                </div>
+                <div className="book-actions">
+                  <button onClick={() => onEdit(book)}>✏️ Sửa</button>
+                  <button onClick={() => onDelete(book.id)}>🗑️ Xóa</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      );
+    }
+
+    function App() {
+      const [books, setBooks] = useState([]);
+      const [editingBook, setEditingBook] = useState(null);
+      const [search, setSearch] = useState('');
+
+      useEffect(() => {
+        const stored = localStorage.getItem('books');
+        if (stored) setBooks(JSON.parse(stored));
+      }, []);
+
+      useEffect(() => {
+        localStorage.setItem('books', JSON.stringify(books));
+      }, [books]);
+
+      const handleAddBook = (book) => setBooks([...books, book]);
+
+      const handleUpdateBook = (updated) => {
+        setBooks(books.map(b => b.id === updated.id ? updated : b));
+        setEditingBook(null);
+      };
+
+      const handleDeleteBook = (id) => {
+        if (confirm("Bạn có chắc muốn xóa sách này?")) {
+          setBooks(books.filter(b => b.id !== id));
+        }
+      };
+
+      const handleEditClick = (book) => setEditingBook(book);
+
+      const filteredBooks = books.filter(book =>
+        book.title.toLowerCase().includes(search.toLowerCase())
+      );
+
+      return (
+        <div className="container">
+          <h1>📚 Quản Lý Sách</h1>
+          <input
+            placeholder="Tìm kiếm theo tiêu đề..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{width: '100%', padding: '10px', marginBottom: '20px'}}
+          />
+          <BookForm
+            onAdd={handleAddBook}
+            onUpdate={handleUpdateBook}
+            editingBook={editingBook}
+          />
+          <BookList
+            books={filteredBooks}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteBook}
+          />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
